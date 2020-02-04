@@ -23,7 +23,7 @@ OBJC = $(PREFIX)objcopy
 DD = dd
 RM = rm -f
 
-OUTPUT = nsfplay
+OUTPUT = swarmnsf
 LIBS = $(LIBPATH) -lgba -lc -lgcc -lnosys
 OBJS = \
     gba_crt0.o \
