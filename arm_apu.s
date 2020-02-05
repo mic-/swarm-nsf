@@ -726,7 +726,7 @@ apu_write:
 @  strcsh    r2,[r3, #CHN_5_SAMPLE]
     ldr     r4,[sp],#4
     bx      lr
-        
+
 .apu_write_framecnt:
     mov     r0,#0
     mov     r2,#4
@@ -739,13 +739,13 @@ apu_write:
     ldreq   r4,[sp],#4
     bxeq    lr
     str     lr,[sp, #-4]!
-    mov     r0,#1        
+    mov     r0,#1
     bl      apu_half_frame
     ldr     lr,[sp],#4
     ldr     r4,[sp],#4
     mov     r0,#1
     b       apu_quarter_frame
-            
+
 .pool
 .endfunc
 
@@ -870,7 +870,7 @@ apu_half_frame:
     bxhi    lr              @ if (currentFrame >= 4) return
     ldr     r2,[r3, #MAX_FRAME]
     eor     r1,r1,r2
-    ands    r1,r1,#1        
+    ands    r1,r1,#1
     bxne    lr              @ if ((currentFrame & 1) != (maxFrame & 1)) return
            
 .do_half_frame:
@@ -920,16 +920,15 @@ apu_half_frame:
     strh    r1,[r3, #CHN_4_OUTPUT_MASK]
 
 .sweep1_half_frame:
-    ldr     r0,[r3, #CHN_1_SWEEP_PERIOD]
     ldrb    r1,[r3, #CHN_1_SWEEP_RELOAD]
-    tst     r0,r0
-    addne   r0,r0,r1
-    subne   r0,r0,#1    @ if (sweepPeriod && !sweepReload) sweepPeriod--
-    bne     .sweep1_check_reload
-    ldrb    r2,[r3, #APU_REGS+R_PULSE1_SWEEP]    
-    mov     r1,#1
+    ldrb    r2,[r3, #APU_REGS+R_PULSE1_SWEEP]
     tst     r2,#0x80
     beq     .sweep1_check_reload
+    ldr     r0,[r3, #CHN_1_SWEEP_PERIOD]
+    tst     r0,r0
+    subne   r0,r0,#1    @ if (sweepPeriod) sweepPeriod--
+    str     r0,[r3, #CHN_1_SWEEP_PERIOD]
+    bne     .sweep1_check_reload
     stmfd   sp!,{r4-r6}
     ldr     r4,[r3, #CHN_1_PERIOD]
     and     r5,r2,#7    @ Shift amount
@@ -938,9 +937,9 @@ apu_half_frame:
     addeq   r6,r4,r6
     subne   r6,r4,r6
     tst     r6,#0x80000
-    @ Todo: Write new value back to the corresponding APU regs? 
     streq   r6,[r3, #CHN_1_PERIOD]
     ldmfd   sp!,{r4-r6}
+    mov     r1,#1       @ Trigger reload of sweep period
 .sweep1_check_reload:
     tst     r1,r1
     movne   r1,#0
@@ -972,16 +971,15 @@ apu_half_frame:
     str     r1,[r3, #PULSE_1_WAVEFORM_PTR]
     
 .sweep2_half_frame:
-    ldr     r0,[r3, #CHN_2_SWEEP_PERIOD]
     ldrb    r1,[r3, #CHN_2_SWEEP_RELOAD]
-    tst     r0,r0
-    addne   r0,r0,r1
-    subne   r0,r0,#1    @ if (sweepPeriod && !sweepReload) sweepPeriod--
-    bne     .sweep2_check_reload
-    ldrb    r2,[r3, #APU_REGS+R_PULSE2_SWEEP]    
-    mov     r1,#1
+    ldrb    r2,[r3, #APU_REGS+R_PULSE2_SWEEP]
     tst     r2,#0x80
     beq     .sweep2_check_reload
+    ldr     r0,[r3, #CHN_2_SWEEP_PERIOD]
+    tst     r0,r0
+    subne   r0,r0,#1    @ if (sweepPeriod) sweepPeriod--
+    str     r0,[r3, #CHN_2_SWEEP_PERIOD]
+    bne     .sweep2_check_reload
     stmfd   sp!,{r4-r6}
     ldr     r4,[r3, #CHN_2_PERIOD]
     and     r5,r2,#7    @ Shift amount
@@ -990,9 +988,9 @@ apu_half_frame:
     addeq   r6,r4,r6
     subne   r6,r4,r6
     tst     r6,#0x80000
-    @ Todo: Write new value back to the corresponding APU regs?
     streq   r6,[r3, #CHN_2_PERIOD]
     ldmfd   sp!,{r4-r6}
+    mov     r1,#1       @ Trigger reload of sweep period
 .sweep2_check_reload:
     tst     r1,r1
     movne   r1,#0
@@ -1001,7 +999,7 @@ apu_half_frame:
     andne   r2,r2,#7
     strb    r1,[r3, #CHN_2_SWEEP_RELOAD]
     addne   r2,r2,#1
-    strne   r2,[r3, #CHN_2_SWEEP_PERIOD]    
+    strne   r2,[r3, #CHN_2_SWEEP_PERIOD]
 
     ldr     r2,[r3, #CHN_2_PERIOD]
     movs    r2,r2,lsr#8
@@ -1158,7 +1156,7 @@ TRIANGLE_WAVE:
 .equ CHN_1_SWEEP_RELOAD,0x1C    @ BOOL
 .equ CHN_1_DUTY_CYCLE,  0x1D    @ UINT8
 .equ CHN_1_OUTPUT,      0x1E    @ INT8
-.equ CHN_1_RESERVED2,   0x1F    
+.equ CHN_1_RESERVED2,   0x1F
 
 @ apu_state offsets for pulse wave channel #2
 .equ CHN_2_POS,         0x20    @ UINT32
@@ -1173,12 +1171,12 @@ TRIANGLE_WAVE:
 .equ CHN_2_SWEEP_RELOAD,0x3C    @ BOOL
 .equ CHN_2_DUTY_CYCLE,  0x3D    @ UINT8
 .equ CHN_2_OUTPUT,      0x3E    @ INT8
-.equ CHN_2_RESERVED2,   0x3F    
+.equ CHN_2_RESERVED2,   0x3F
 
 @ apu_state offsets for the triangle channel
 .equ CHN_3_POS,         0x40    @ UINT32
 .equ CHN_3_PERIOD,      0x44    @ UINT32
-.equ CHN_3_LENC_STEP,   0x48    
+.equ CHN_3_LENC_STEP,   0x48
 .equ CHN_3_LINC_STEP,   0x4C
 .equ CHN_3_WAVE_STEP,   0x50
 .equ CHN_3_TO_DAC,      0x54    @ INT16
@@ -1188,7 +1186,7 @@ TRIANGLE_WAVE:
 .equ CHN_3_LINC_RELOAD, 0x5C    @ BOOL
 .equ CHN_3_DUTY_CYCLE,  0x5D    @ UINT8
 .equ CHN_3_OUTPUT,      0x5E    @ INT8
-.equ CHN_3_RESERVED2,   0x5F  
+.equ CHN_3_RESERVED2,   0x5F
 
 @ apu_state offsets for the noise channel
 .equ CHN_4_POS,         0x60    @ UINT32
@@ -1197,13 +1195,13 @@ TRIANGLE_WAVE:
 .equ CHN_4_LFSR,        0x6C    @ UINT16
 .equ CHN_4_TO_DAC,      0x6E    @ INT16
 .equ CHN_4_RESERVED2,   0x70
-.equ CHN_4_RESERVED3,   0x74    
+.equ CHN_4_RESERVED3,   0x74
 .equ CHN_4_VOLUME,      0x78    @ UINT16
 .equ CHN_4_OUTPUT_MASK, 0x7A    @ UINT16
-.equ CHN_4_RESERVED4,   0x7C  
-.equ CHN_4_RESERVED5,   0x7D  
+.equ CHN_4_RESERVED4,   0x7C
+.equ CHN_4_RESERVED5,   0x7D
 .equ CHN_4_OUTPUT,      0x7E    @ INT8
-.equ CHN_4_RESERVED5,   0x7F  
+.equ CHN_4_RESERVED5,   0x7F
 
 @ apu_state offsets for the DMC channel
 .equ CHN_5_POS,         0x80    @ UINT32
@@ -1212,7 +1210,7 @@ TRIANGLE_WAVE:
 .equ CHN_5_SAMPLE_LEN,  0x8C    @ UINT16
 .equ CHN_5_TO_DAC,      0x90    @ INT16
 .equ CHN_5_RESERVED1,   0x92
-.equ CHN_5_RESERVED2,   0x94    
+.equ CHN_5_RESERVED2,   0x94
 .equ CHN_5_SAMPLE_ADDR, 0x98    @ UINT16
 .equ CHN_5_OUTPUT_MASK, 0x9A    @ UINT16
 .equ CHN_5_SAMPLE,      0x9C    @ UINT8
