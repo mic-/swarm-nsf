@@ -38,7 +38,7 @@ nsfmapper_reset:
 .func nsfmapper_get_rom_pointer
 nsfmapper_get_rom_pointer:
     ldr     r0,=NSFROM
-    bx  lr
+    bx      lr
 .endfunc
 
 @ In:  r0 = address
@@ -51,14 +51,14 @@ nsfmapper_read_byte:
     ldr     r9,[pc,r9,lsl#2]
     bx      r9
 .page_lut:
-    .word	nsfmapper_read_0000
-    .word	nsfmapper_read_0000
-    .word	nsfmapper_read_2000
-    .word	nsfmapper_read_2000
-    .word	nsfmapper_read_4000
-    .word	nsfmapper_read_4000
-    .word	nsfmapper_read_6000
-    .word	nsfmapper_read_6000
+    .word   nsfmapper_read_0000
+    .word   nsfmapper_read_0000
+    .word   nsfmapper_read_2000
+    .word   nsfmapper_read_2000
+    .word   nsfmapper_read_4000
+    .word   nsfmapper_read_4000
+    .word   nsfmapper_read_6000
+    .word   nsfmapper_read_6000
     .word   nsfmapper_read_8000
     .word   nsfmapper_read_8000
     .word   nsfmapper_read_8000
@@ -76,14 +76,14 @@ nsfmapper_read_byte_pc:
     mov     r9,r10,lsr#12
     ldr     r9,[pc,r9,lsl#2]
     bx      r9
-    .word	nsfmapper_read_pc_0000
-    .word	nsfmapper_read_pc_0000
-    .word	nsfmapper_read_pc_2000
-    .word	nsfmapper_read_pc_2000
-    .word	nsfmapper_read_4000
-    .word	nsfmapper_read_4000
-    .word	nsfmapper_read_pc_6000
-    .word	nsfmapper_read_pc_6000
+    .word   nsfmapper_read_pc_0000
+    .word   nsfmapper_read_pc_0000
+    .word   nsfmapper_read_pc_2000
+    .word   nsfmapper_read_pc_2000
+    .word   nsfmapper_read_4000
+    .word   nsfmapper_read_4000
+    .word   nsfmapper_read_pc_6000
+    .word   nsfmapper_read_pc_6000
     .word   nsfmapper_read_pc_8000
     .word   nsfmapper_read_pc_8000
     .word   nsfmapper_read_pc_8000
@@ -95,7 +95,7 @@ nsfmapper_read_byte_pc:
 .endfunc
 
 @ Same as nsfmapper_read_byte_pc, but reads two bytes: the first is returned in r0 and the second in r1.
-@ Since many 6502 instruction have at least one operand byte, it's typically faster sometimes read an
+@ Since many 6502 instruction have at least one operand byte, it's typically faster to sometimes read an
 @ extra byte that won't be used than to frequently have to make an extra read_byte call.
 .type nsfmapper_read_instruction, %function
 .func nsfmapper_read_instruction
@@ -103,14 +103,14 @@ nsfmapper_read_instruction:
     mov     r9,r10,lsr#12
     ldr     r9,[pc,r9,lsl#2]
     bx      r9
-    .word	nsfmapper_read_instruction_0000
-    .word	nsfmapper_read_instruction_0000
-    .word	nsfmapper_read_instruction_2000
-    .word	nsfmapper_read_instruction_2000
-    .word	nsfmapper_read_instruction_4000
-    .word	nsfmapper_read_instruction_4000
-    .word	nsfmapper_read_instruction_6000
-    .word	nsfmapper_read_instruction_6000
+    .word   nsfmapper_read_instruction_0000
+    .word   nsfmapper_read_instruction_0000
+    .word   nsfmapper_read_instruction_2000
+    .word   nsfmapper_read_instruction_2000
+    .word   nsfmapper_read_instruction_4000
+    .word   nsfmapper_read_instruction_4000
+    .word   nsfmapper_read_instruction_6000
+    .word   nsfmapper_read_instruction_6000
     .word   nsfmapper_read_instruction_8000
     .word   nsfmapper_read_instruction_8000
     .word   nsfmapper_read_instruction_8000

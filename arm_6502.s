@@ -291,10 +291,10 @@
 .endm
 
 .macro LSRop val
-    bic		r8,#(FLAG_N|FLAG_Z|FLAG_C)
-    movs	\val,\val,lsr#1     @ val >>= 1
-    orrcs	r8,r8,#FLAG_C       @ F |= Carry ? FLAG_C : 0
-  	orr 	r12,\val,\val,lsl#8	
+    bic     r8,#(FLAG_N|FLAG_Z|FLAG_C)
+    movs    \val,\val,lsr#1     @ val >>= 1
+    orrcs   r8,r8,#FLAG_C       @ F |= Carry ? FLAG_C : 0
+    orr     r12,\val,\val,lsl#8
 .endm
 
 .macro ROLop val
@@ -307,12 +307,12 @@
 .endm
 
 .macro RORop val
-    orr		\val,\val,r8,lsl#8  @ val |= Carry ? 0x100 : 0
-    bic		r8,#(FLAG_N|FLAG_Z|FLAG_C)
-    movs	\val,\val,lsr#1     @ val >>= 1
-    orrcs	r8,r8,#FLAG_C       @ F |= Carry ? FLAG_C : 0
-    and		\val,\val,#0xFF
-    orr 	r12,\val,\val,lsl#8
+    orr     \val,\val,r8,lsl#8  @ val |= Carry ? 0x100 : 0
+    bic     r8,#(FLAG_N|FLAG_Z|FLAG_C)
+    movs    \val,\val,lsr#1     @ val >>= 1
+    orrcs   r8,r8,#FLAG_C       @ F |= Carry ? FLAG_C : 0
+    and     \val,\val,#0xFF
+    orr     r12,\val,\val,lsl#8
 .endm
 
 @ ###########################################################################################################
@@ -473,179 +473,179 @@ emu6502_reset:
 @ == ADC ==
 
 op_69:      @ ADC imm
-    IMM_OP r1
+    IMM_OP  r1
     ADD_CYCLES 2
-    ADC_A r1
+    ADC_A   r1
 
 op_65:      @ ADC zp
-    ZP_OP r1
+    ZP_OP   r1
     ADD_CYCLES 3
-    ADC_A r1
+    ADC_A   r1
 
 op_75:      @ ADC zp,X
-    ZPX_OP r1
+    ZPX_OP  r1
     ADD_CYCLES 4
-    ADC_A r1
+    ADC_A   r1
 
 op_6D:      @ ADC abs
-    ABS_OP r1
+    ABS_OP  r1
     ADD_CYCLES 4
-    ADC_A r1
+    ADC_A   r1
 
 op_7D:      @ ADC abs,X
-	ABSX_OP r1
-	ADD_CYCLES 4
-	ADC_A r1
+    ABSX_OP r1
+    ADD_CYCLES 4
+    ADC_A   r1
 
-op_79:		@ ADC abs,Y
-	ABSY_OP r1
-	ADD_CYCLES 4
-	ADC_A r1
-			
-op_61:		@ ADC (zp,X)
-	INDX_OP r1
-	ADD_CYCLES 6
-	ADC_A r1
+op_79:      @ ADC abs,Y
+    ABSY_OP r1
+    ADD_CYCLES 4
+    ADC_A   r1
 
-op_71:		@ ADC (zp),Y
-	INDY_OP r1
-	ADD_CYCLES 5
-	ADC_A r1
-			
+op_61:      @ ADC (zp,X)
+    INDX_OP r1
+    ADD_CYCLES 6
+    ADC_A   r1
+
+op_71:      @ ADC (zp),Y
+    INDY_OP r1
+    ADD_CYCLES 5
+    ADC_A   r1
+
 
 @ == AND ==
-op_29:		@ AND imm
-	IMM_OP r1
-	BITWISE_LOGIC and,r1,2
+op_29:      @ AND imm
+    IMM_OP r1
+    BITWISE_LOGIC and,r1,2
 
-op_25:		@ AND zp
-	ZP_OP r1
-	BITWISE_LOGIC and,r1,3
+op_25:      @ AND zp
+    ZP_OP r1
+    BITWISE_LOGIC and,r1,3
 
-op_35:		@ AND zp,X
-	ZPX_OP r1
-	BITWISE_LOGIC and,r1,4
+op_35:      @ AND zp,X
+    ZPX_OP r1
+    BITWISE_LOGIC and,r1,4
 
-op_2D:		@ AND abs
-	ABS_OP r1
-	BITWISE_LOGIC and,r1,4
+op_2D:      @ AND abs
+    ABS_OP r1
+    BITWISE_LOGIC and,r1,4
 
-op_3D:		@ AND abs,X
-	ABSX_OP r1
-	BITWISE_LOGIC and,r1,4
+op_3D:      @ AND abs,X
+    ABSX_OP r1
+    BITWISE_LOGIC and,r1,4
 
-op_39:		@ AND abs,Y
-	ABSY_OP r1
-	BITWISE_LOGIC and,r1,4
+op_39:      @ AND abs,Y
+    ABSY_OP r1
+    BITWISE_LOGIC and,r1,4
 
-op_21:		@ AND (zp,X)
-	INDX_OP r1
-	BITWISE_LOGIC and,r1,6
+op_21:      @ AND (zp,X)
+    INDX_OP r1
+    BITWISE_LOGIC and,r1,6
 
-op_31:		@ AND (zp),Y
-	INDY_OP	r1
-	BITWISE_LOGIC and,r1,5
+op_31:      @ AND (zp),Y
+    INDY_OP r1
+    BITWISE_LOGIC and,r1,5
 
 @ == ASL ==
-op_0A:		@ ASL A
-	ASLop r5
-	ADD_CYCLES 2
-	RETURN
+op_0A:      @ ASL A
+    ASLop   r5
+    ADD_CYCLES 2
+    RETURN
 
-op_06:		@ ASL zp
-	ZP_ADDR r1
-	READ_BYTE r2,r1
-	ASLop r2
-	strb r2,[r3,r1]
-	ADD_CYCLES 5
-	RETURN
-
-op_16:		@ ASL zp,X
-    ZPX_ADDR r2
-    READ_BYTE r1,r2
-    ASLop r1
-    strb r1,[r3,r2]
+op_06:      @ ASL zp
+    ZP_ADDR r1
+    READ_BYTE r2,r1
+    ASLop   r2
+    strb    r2,[r3,r1]
     ADD_CYCLES 5
     RETURN
 
-op_0E:		@ ASL abs
+op_16:      @ ASL zp,X
+    ZPX_ADDR r2
+    READ_BYTE r1,r2
+    ASLop   r1
+    strb    r1,[r3,r2]
+    ADD_CYCLES 5
+    RETURN
+
+op_0E:      @ ASL abs
     @ ToDo: could load the address into r9?
     ABS_ADDR r1
     READ_BYTE r9,r1
-    ASLop 	r9
-    mov	r0,r1
-    mov	r1,r9
-    bl	nsfmapper_write_byte
+    ASLop   r9
+    mov     r0,r1
+    mov     r1,r9
+    bl      nsfmapper_write_byte
     ADD_CYCLES 6
     RETURN
 
-op_1E:		@ ASL abs,X
+op_1E:      @ ASL abs,X
     @ ToDo: could load the address into r9?
     ABSX_ADDR r1
     READ_BYTE r9,r1
     ASLop 	r9
-    mov	r0,r1
-    mov	r1,r9
-    bl	nsfmapper_write_byte
+    mov     r0,r1
+    mov     r1,r9
+    bl      nsfmapper_write_byte
     ADD_CYCLES 6
     RETURN
 
 
 @ == Bxx ==
-op_10:		@ BPL rel
-    tst		r12,#0x8000
+op_10:      @ BPL rel
+    tst     r12,#0x8000
     COND_BRANCH_CLEAR
 
-op_30:		@ BMI rel
-    tst		r12,#0x8000
+op_30:      @ BMI rel
+    tst     r12,#0x8000
     COND_BRANCH_SET
 
-op_50:		@ BVC rel
-	tst		r8,#FLAG_V
-	COND_BRANCH_CLEAR
+op_50:      @ BVC rel
+    tst     r8,#FLAG_V
+    COND_BRANCH_CLEAR
 
-op_70:		@ BVS rel
-	tst		r8,#FLAG_V
-	COND_BRANCH_SET
+op_70:      @ BVS rel
+    tst     r8,#FLAG_V
+    COND_BRANCH_SET
 
-op_90:		@ BCC rel
-	tst		r8,#FLAG_C
-	COND_BRANCH_CLEAR
+op_90:      @ BCC rel
+    tst     r8,#FLAG_C
+    COND_BRANCH_CLEAR
 
-op_B0:		@ BCS rel
-	tst		r8,#FLAG_C
-	COND_BRANCH_SET
+op_B0:      @ BCS rel
+    tst     r8,#FLAG_C
+    COND_BRANCH_SET
 
-op_D0:		@ BNE rel
-	tst		r12,#0xFF
-	COND_BRANCH_SET
+op_D0:      @ BNE rel
+    tst     r12,#0xFF
+    COND_BRANCH_SET
 
-op_F0:		@ BEQ rel
-	tst		r12,#0xFF
-	COND_BRANCH_CLEAR
-			
+op_F0:      @ BEQ rel
+    tst     r12,#0xFF
+    COND_BRANCH_CLEAR
+
 
 @ == BIT ==
-op_24:		@ BIT zp
-	ZP_OP r1
-	BITop r1,3
+op_24:      @ BIT zp
+    ZP_OP   r1
+    BITop   r1,3
 
-op_2C:		@ BIT abs
-	ABS_OP r1
-	BITop r1,4
-	
+op_2C:      @ BIT abs
+    ABS_OP  r1
+    BITop   r1,4
+
 @ ====
-op_00:		@ BRK
-    add		r10,r10,#1
-    mov		r1,r10,lsl#16
-    mov		r1,r1,lsr#16
+op_00:      @ BRK
+    add     r10,r10,#1
+    mov     r1,r10,lsl#16
+    mov     r1,r1,lsr#16
     PUSHW
     PACK_FLAGS
-    orr		r1,r8,#0x30
+    orr     r1,r8,#0x30
     PUSHB
-    orr		r8,r8,#(FLAG_B|FLAG_I)
-    ldr		r0,=brkVector
-    ldr		r10,[r0]
+    orr     r8,r8,#(FLAG_B|FLAG_I)
+    ldr     r0,=brkVector
+    ldr     r10,[r0]
     FETCH_ADDR
     ADD_CYCLES 7
     RETURN
@@ -679,93 +679,93 @@ op_B8:      @ CLV
 
 @ == CMP ==
 op_C9:      @ CMP imm
-    IMM_OP r1
-    CMPreg r5
+    IMM_OP  r1
+    CMPreg  r5
     ADD_CYCLES 2
     RETURN
 
 op_C5:      @ CMP zp
-    ZP_OP r1
-    CMPreg r5
+    ZP_OP   r1
+    CMPreg  r5
     ADD_CYCLES 3
     RETURN
 
-op_D5:		@ CMP zp,X
-	ZPX_OP r1
-	CMPreg r5
-	ADD_CYCLES 4
-	RETURN
-
-op_CD:		@ CMP abs
-	ABS_OP r1
-	CMPreg r5
-	ADD_CYCLES 4
-	RETURN
-
-op_DD:		@ CMP abs,X
-	ABSX_OP r1
-	CMPreg r5
-	ADD_CYCLES 4
-	RETURN
-
-op_D9:		@ CMP abs,Y
-    ABSY_OP r1
-    CMPreg r5
+op_D5:      @ CMP zp,X
+    ZPX_OP  r1
+    CMPreg  r5
     ADD_CYCLES 4
     RETURN
 
-op_C1:		@ CMP (zp,X)
+op_CD:      @ CMP abs
+    ABS_OP  r1
+    CMPreg  r5
+    ADD_CYCLES 4
+    RETURN
+
+op_DD:      @ CMP abs,X
+    ABSX_OP r1
+    CMPreg  r5
+    ADD_CYCLES 4
+    RETURN
+
+op_D9:      @ CMP abs,Y
+    ABSY_OP r1
+    CMPreg  r5
+    ADD_CYCLES 4
+    RETURN
+
+op_C1:      @ CMP (zp,X)
     INDX_OP r1
-    CMPreg r5
+    CMPreg  r5
     ADD_CYCLES 6
     RETURN
 
-op_D1:		@ CMP (zp),Y
+op_D1:      @ CMP (zp),Y
     INDY_OP r1
-    CMPreg r5
+    CMPreg  r5
     ADD_CYCLES 5
     RETURN
 
 
 @ == CPX ==
-op_E0:		@ CPX imm
-    IMM_OP r1
-    CMPreg r6
+op_E0:      @ CPX imm
+    IMM_OP  r1
+    CMPreg  r6
     ADD_CYCLES 2
     RETURN
 
-op_E4:		@ CPX zp
-    ZP_OP r1
-    CMPreg r6
+op_E4:      @ CPX zp
+    ZP_OP   r1
+    CMPreg  r6
     ADD_CYCLES 3
     RETURN
 
-op_EC:		@ CPX abs
-	ABS_OP r1
-	CMPreg r6
-	ADD_CYCLES 4
-	RETURN
+op_EC:      @ CPX abs
+    ABS_OP  r1
+    CMPreg  r6
+    ADD_CYCLES 4
+    RETURN
 
 @ == CPY ==
-op_C0:		@ CPY imm
-	IMM_OP r1
-	CMPreg r7
-	ADD_CYCLES 2
-	RETURN
+op_C0:      @ CPY imm
+    IMM_OP  r1
+    CMPreg  r7
+    ADD_CYCLES 2
+    RETURN
 
-op_C4:		@ CPY zp
-	ZP_OP r1
-	CMPreg r7
-	ADD_CYCLES 3
-	RETURN
+op_C4:      @ CPY zp
+    ZP_OP   r1
+    CMPreg  r7
+    ADD_CYCLES 3
+    RETURN
 
-op_CC:		@ CPY abs
-	ABS_OP r1
-	CMPreg r7
-	ADD_CYCLES 4
-	RETURN
-			
-			
+op_CC:      @ CPY abs
+    ABS_OP  r1
+    CMPreg  r7
+    ADD_CYCLES 4
+    RETURN
+
+
 @ == DEC ==
 op_C6:		@ DEC zp
     ZP_ADDR r1
