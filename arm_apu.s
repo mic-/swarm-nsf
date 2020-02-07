@@ -874,6 +874,8 @@ apu_half_frame:
     bxne    lr              @ if ((currentFrame & 1) != (maxFrame & 1)) return
            
 .do_half_frame:
+    stmfd   sp!,{r4-r6}
+
     ldrb    r0,[r3, #APU_REGS+R_PULSE1_DUTY_ENVE]
     tst     r0,#0x20
     bne     .pulse2_half_frame
@@ -914,22 +916,25 @@ apu_half_frame:
     ldr     r0,[r3, #CHN_4_LENC_STEP]
     tst     r0,r0
     mvn     r1,#0
-    subnes  r0,r0,#1    
+    subnes  r0,r0,#1
     str     r0,[r3, #CHN_4_LENC_STEP]
     moveq   r1,#0
     strh    r1,[r3, #CHN_4_OUTPUT_MASK]
 
 .sweep1_half_frame:
-    ldrb    r1,[r3, #CHN_1_SWEEP_RELOAD]
     ldrb    r2,[r3, #APU_REGS+R_PULSE1_SWEEP]
-    tst     r2,#0x80
-    beq     .sweep1_check_reload
+    and     r1,r2,#0x87
+    cmp     r1,#0x80
+    bls     .sweep1_check_reload    @ Either the enable bit is clear or the shift count is 0
     ldr     r0,[r3, #CHN_1_SWEEP_PERIOD]
     tst     r0,r0
     subne   r0,r0,#1    @ if (sweepPeriod) sweepPeriod--
     str     r0,[r3, #CHN_1_SWEEP_PERIOD]
     bne     .sweep1_check_reload
-    stmfd   sp!,{r4-r6}
+    mov     r1,r2,lsr#4
+    and     r1,r1,#7
+    add     r1,r1,#1
+    str     r1,[r3, #CHN_1_SWEEP_PERIOD]
     ldr     r4,[r3, #CHN_1_PERIOD]
     and     r5,r2,#7    @ Shift amount
     mov     r6,r4,lsr r5
@@ -937,32 +942,19 @@ apu_half_frame:
     addeq   r6,r4,r6
     subne   r6,r4,r6
     tst     r6,#0x80000
-    streq   r6,[r3, #CHN_1_PERIOD]
-    ldmfd   sp!,{r4-r6}
-    mov     r1,#1       @ Trigger reload of sweep period
-.sweep1_check_reload:
-    tst     r1,r1
-    movne   r1,#0
-    ldrneb  r2,[r3, #APU_REGS+R_PULSE1_SWEEP] 
-    movne   r2,r2,lsr#4
-    andne   r2,r2,#7
-    strb    r1,[r3, #CHN_1_SWEEP_RELOAD]
-    addne   r2,r2,#1
-    strne   r2,[r3, #CHN_1_SWEEP_PERIOD]
-
-    ldr     r2,[r3, #CHN_1_PERIOD]
-    movs    r2,r2,lsr#8
-    beq     1f
-    stmfd   sp!,{r2,r3}         @ save registers that will be clobbered by SWI_DIV
+    bne     .sweep2_half_frame
+    str     r6,[r3, #CHN_1_PERIOD]
+    @ Recalculate frequency and wavetable entry address
+    movs    r6,r6,lsr#8
+    str     r3,[sp, #-4]!
     ldr     r0,[r3, #CPU_CLOCK]
-    add     r1,r2,#1
+    add     r1,r6,#1
     mov     r1,r1,lsl#4
     swi     ARM_SWI_DIV         @ calculate frequency based on period
-    ldmfd   sp!,{r2,r3}
-1:
+    ldr     r3,[sp],#4
     str     r0,[r3, #PULSE_1_FREQ]
     ldr     r1,=wave_table_index
-    ldrb    r0,[r1,r2]
+    ldrb    r0,[r1,r6]
     ldrb    r1,[r3, #CHN_1_DUTY_CYCLE]
     mov     r1,r1,lsl#11        @ r1 = dutyCycle * 0x800
     add     r1,r1,r0,lsl#7
@@ -970,17 +962,31 @@ apu_half_frame:
     add     r1,r1,r0
     str     r1,[r3, #PULSE_1_WAVEFORM_PTR]
     
+.sweep1_check_reload:
+    ldrb    r1,[r3, #CHN_1_SWEEP_RELOAD]
+    tst     r1,r1
+    movne   r1,#0
+    ldrneb  r2,[r3, #APU_REGS+R_PULSE1_SWEEP]
+    movne   r2,r2,lsr#4
+    andne   r2,r2,#7
+    strb    r1,[r3, #CHN_1_SWEEP_RELOAD]
+    addne   r2,r2,#1
+    strne   r2,[r3, #CHN_1_SWEEP_PERIOD]
+
 .sweep2_half_frame:
-    ldrb    r1,[r3, #CHN_2_SWEEP_RELOAD]
     ldrb    r2,[r3, #APU_REGS+R_PULSE2_SWEEP]
-    tst     r2,#0x80
-    beq     .sweep2_check_reload
+    and     r1,r2,#0x87
+    cmp     r1,#0x80
+    bls     .sweep2_check_reload
     ldr     r0,[r3, #CHN_2_SWEEP_PERIOD]
     tst     r0,r0
     subne   r0,r0,#1    @ if (sweepPeriod) sweepPeriod--
     str     r0,[r3, #CHN_2_SWEEP_PERIOD]
     bne     .sweep2_check_reload
-    stmfd   sp!,{r4-r6}
+    mov     r1,r2,lsr#4
+    and     r1,r1,#7
+    add     r1,r1,#1
+    str     r1,[r3, #CHN_2_SWEEP_PERIOD]
     ldr     r4,[r3, #CHN_2_PERIOD]
     and     r5,r2,#7    @ Shift amount
     mov     r6,r4,lsr r5
@@ -988,39 +994,38 @@ apu_half_frame:
     addeq   r6,r4,r6
     subne   r6,r4,r6
     tst     r6,#0x80000
-    streq   r6,[r3, #CHN_2_PERIOD]
-    ldmfd   sp!,{r4-r6}
-    mov     r1,#1       @ Trigger reload of sweep period
-.sweep2_check_reload:
-    tst     r1,r1
-    movne   r1,#0
-    ldrneb  r2,[r3, #APU_REGS+R_PULSE2_SWEEP] 
-    movne   r2,r2,lsr#4
-    andne   r2,r2,#7
-    strb    r1,[r3, #CHN_2_SWEEP_RELOAD]
-    addne   r2,r2,#1
-    strne   r2,[r3, #CHN_2_SWEEP_PERIOD]
-
-    ldr     r2,[r3, #CHN_2_PERIOD]
-    movs    r2,r2,lsr#8
-    beq     1f
-    stmfd   sp!,{r2,r3}         @ save registers that will be clobbered by SWI_DIV
+    bne     .sweep2_check_reload
+    str     r6,[r3, #CHN_2_PERIOD]
+    @ Recalculate frequency and wavetable entry address
+    movs    r6,r6,lsr#8
+    str     r3,[sp, #-4]!
     ldr     r0,[r3, #CPU_CLOCK]
-    add     r1,r2,#1
+    add     r1,r6,#1
     mov     r1,r1,lsl#4
     swi     ARM_SWI_DIV         @ calculate frequency based on period
-    ldmfd   sp!,{r2,r3}
-1:
+    ldr     r3,[sp],#4
     str     r0,[r3, #PULSE_2_FREQ]
     ldr     r1,=wave_table_index
-    ldrb    r0,[r1,r2]
+    ldrb    r0,[r1,r6]
     ldrb    r1,[r3, #CHN_2_DUTY_CYCLE]
     mov     r1,r1,lsl#11        @ r1 = dutyCycle * 0x800
     add     r1,r1,r0,lsl#7
     ldr     r0,=wave_table
     add     r1,r1,r0
     str     r1,[r3, #PULSE_2_WAVEFORM_PTR]
-    
+
+.sweep2_check_reload:
+    ldrb    r1,[r3, #CHN_2_SWEEP_RELOAD]
+    tst     r1,r1
+    movne   r1,#0
+    ldrneb  r2,[r3, #APU_REGS+R_PULSE2_SWEEP]
+    movne   r2,r2,lsr#4
+    andne   r2,r2,#7
+    strb    r1,[r3, #CHN_2_SWEEP_RELOAD]
+    addne   r2,r2,#1
+    strne   r2,[r3, #CHN_2_SWEEP_PERIOD]
+
+    ldmfd   sp!,{r4-r6}
     bx  lr
 .pool
 .endfunc
